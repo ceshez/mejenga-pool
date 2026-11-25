@@ -1,0 +1,17 @@
+# Rust's output directory
+target
+
+# Local settings
+.soroban
+.stellar
+
+# Credenciales y configuración privada
+.env
+.env.*
+!.env.example
+*.secret
+
+# Artefactos locales
+node_modules
+.DS_Store
+**/test_snapshots/
