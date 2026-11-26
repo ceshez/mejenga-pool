@@ -9,7 +9,10 @@ const env = Object.fromEntries(text.split(/\r?\n/).map((line) => line.trim()).fi
   const index = line.indexOf('=');
   return [line.slice(0, index).trim(), line.slice(index + 1).trim().replace(/^["']|["']$/g, '')];
 }));
-const trustlessConfigured = Boolean(env.TRUSTLESS_WORK_API_KEY || env.TRUSTLESS_WORK_API_KEY_ID);
+const trustlessKey = env.TRUSTLESS_WORK_API_KEY || env.TRUSTLESS_WORK_API_KEY_ID || '';
+const trustlessConfigured = Boolean(trustlessKey);
+const trustlessSigner = 'GDXK3KSXBR4SYHJJMRF3EVQKRLZCH3CDSDAT2WJFJBK4IC2PXAMM3ZWL';
+const trustlessEscrowId = 'CADIYI2MPDEMH7EBYSAMDKC5E44FN4FIQ4EBXJB2R234WIVIKVNOKZ4Z';
 const vite = await createViteServer({ root, server: { middlewareMode: true }, appType: 'mpa' });
 
 createServer(async (request, response) => {
@@ -20,6 +23,23 @@ createServer(async (request, response) => {
   if (url.pathname === '/api/trustless/status') {
     response.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
     response.end(JSON.stringify({ configured: trustlessConfigured, network: 'testnet' })); return;
+  }
+  if (url.pathname === '/api/trustless/escrow') {
+    if (!trustlessConfigured) { response.writeHead(503); response.end(); return; }
+    try {
+      const endpoint = new URL('https://dev.api.trustlesswork.com/helper/get-escrows-by-signer');
+      endpoint.searchParams.set('signer', trustlessSigner);
+      const upstream = await fetch(endpoint, { headers: { 'x-api-key': trustlessKey } });
+      if (!upstream.ok) throw new Error('Trustless Work rechazó la consulta.');
+      const items = await upstream.json();
+      const escrow = Array.isArray(items) ? items.find((item) => item.contractId === trustlessEscrowId) : null;
+      response.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
+      response.end(JSON.stringify(escrow ? { found: true, contractId: escrow.contractId, title: escrow.title, amount: escrow.amount, balance: escrow.balance, isActive: escrow.isActive } : { found: false }));
+    } catch {
+      response.writeHead(502, { 'content-type': 'application/json; charset=utf-8' });
+      response.end(JSON.stringify({ error: 'No se pudo consultar el escrow de Trustless Work.' }));
+    }
+    return;
   }
   if (url.pathname === '/api/stellar') {
     if (request.method !== 'POST') { response.writeHead(405); response.end(); return; }

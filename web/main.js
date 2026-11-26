@@ -18,6 +18,7 @@ const $ = (id) => document.getElementById(id);
 const server = new rpc.Server(`${location.origin}/api/stellar`, { allowHttp: true });
 const stroops = 10_000_000n;
 const money = (n) => (Number(n) / Number(stroops)).toLocaleString('es-CR', { maximumFractionDigits: 7 });
+const xlmForInput = (n) => `${n / stroops}${n % stroops ? `.${String(n % stroops).padStart(7, '0').replace(/0+$/, '')}` : ''}`;
 const short = (a) => `${a.slice(0, 5)}…${a.slice(-5)}`;
 const explorer = (id) => `https://stellar.expert/explorer/testnet/contract/${id}`;
 const txExplorer = (hash) => `https://stellar.expert/explorer/testnet/tx/${hash}`;
@@ -121,6 +122,22 @@ function updateActions() {
   $('create-preview').disabled = busy;
 }
 
+function validateContribution() {
+  if (!state) return;
+  const remaining = BigInt(state.meta) - BigInt(state.recaudado);
+  const input = $('contribution');
+  const label = `Máximo que podés aportar ahora: ${money(remaining > 0n ? remaining : 0n)} XLM.`;
+  let exceeds = false;
+  if (input.value) {
+    try { exceeds = parseXlm(input.value) > remaining; } catch { /* El campo valida su propio formato. */ }
+  }
+  input.setCustomValidity(exceeds ? `Tu aporte supera el máximo disponible de ${money(remaining)} XLM.` : '');
+  $('amount-help').textContent = exceeds ? `Superás el límite. ${label}` : label;
+  $('amount-help').classList.toggle('error', exceeds);
+}
+
+$('contribution').addEventListener('input', validateContribution);
+
 function render(s) {
   state = s;
   const raised = BigInt(s.recaudado);
@@ -135,6 +152,8 @@ function render(s) {
   $('progress').querySelector('.progress-fill').style.width = `${pct}%`;
   $('progress-percent').textContent = `${pct.toLocaleString('es-CR', { maximumFractionDigits: 1 })}% completado`;
   $('remaining-xlm').textContent = raised >= goal ? 'Meta completada' : `Faltan ${money(goal - raised)} XLM`;
+  $('contribution').max = xlmForInput(goal > raised ? goal - raised : 0n);
+  validateContribution();
   $('field-display').textContent = short(s.cancha);
   $('field-display').title = s.cancha;
   const deadline = new Date(Number(s.limite) * 1000);
@@ -275,9 +294,27 @@ function renderExtraMatches() {
   }
 }
 
-fetch('/api/trustless/status').then((res) => res.json()).then((data) => {
-  $('tw-status').textContent = data.configured ? 'Clave de API configurada en el servidor local. El BackOffice permite gestionar escrows de Testnet por separado.' : 'La API key no está configurada. Agregá TRUSTLESS_WORK_API_KEY al .env local para la integración complementaria.';
-}).catch(() => { $('tw-status').textContent = 'La integración local no está disponible.'; });
+if (location.protocol !== 'file:') fetch('/api/trustless/escrow').then((res) => {
+  if (!res.ok) throw new Error('La consulta no está disponible.');
+  return res.json();
+}).then((data) => {
+  $('tw-status').textContent = data.found
+    ? `Escrow V1 indexado para ceshez: ${data.amount} USDC de Testnet, saldo ${data.balance} USDC. En el Viewer pegá el ID; en BackOffice V1 elegí Testnet y conectá ceshez. Es independiente de la mejenga de 1000 XLM.`
+    : 'El escrow complementario aún no aparece en el índice de Trustless Work.';
+  if (data.found) {
+    $('tw-contract-link').href = explorer(data.contractId);
+    $('tw-contract-link').hidden = false;
+  }
+}).catch(() => { $('tw-status').textContent = 'No se pudo consultar Trustless Work. Revisá la API key en el .env y la conexión.'; });
+
+$('tw-copy').addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(cfg.trustlessEscrowId);
+    $('tw-copy').textContent = 'ID copiado ✓';
+  } catch {
+    $('tw-copy').textContent = 'Seleccioná el ID de arriba para copiarlo';
+  }
+});
 
 renderExtraMatches();
 updateWallet();

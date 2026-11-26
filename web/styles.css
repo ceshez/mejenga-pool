@@ -205,3 +205,13 @@ button:disabled { cursor: not-allowed; opacity: .55; }
   .progress-labels { font-size: .69rem; }
   .crest { width: 52px; height: 57px; }
 }
+.file-warning { padding: 12px 0; background: #fff3d1; border-bottom: 1px solid #d8b96d; color: #543e15; font-size: .82rem; line-height: 1.5; }
+.file-warning a { color: #194d35; font-weight: 750; text-decoration: underline; }
+.file-warning code { padding: 2px 4px; border-radius: 4px; background: #fff9e8; }
+.amount-help { margin: 9px 0 0; color: #536b5b; font-size: .74rem; line-height: 1.4; }
+.amount-help.error { color: #ad2d34; font-weight: 700; }
+.tw-created { display: inline-block; margin: 2px 0 8px !important; padding: 5px 9px; border-radius: 99px; background: #daf1df; color: #155637 !important; font-weight: 750; }
+.tw-id { margin-top: 8px !important; font-family: ui-monospace, Consolas, monospace; overflow-wrap: anywhere; font-size: .7rem !important; }
+.trustless .text-link { margin-top: 9px; }
+.tw-links { display: flex; flex-wrap: wrap; gap: 8px 17px; }
+.copy-link { padding: 0; border: 0; background: transparent; cursor: pointer; }

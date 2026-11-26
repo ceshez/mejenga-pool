@@ -25,7 +25,7 @@ npm install
 npm run dev
 ```
 
-Abrí **http://127.0.0.1:4173/web/**. La página consulta el estado real del contrato en Testnet. El botón del encabezado abre el selector de Stellar Wallets Kit. Elegí una wallet configurada en **Testnet** y con XLM de prueba para aportar. La wallet debe confirmar cada transacción; ninguna clave privada se introduce en la página.
+Abrí **http://127.0.0.1:4173/web/**. **No abras `web/index.html` con doble clic como `file://`**: así el navegador no puede resolver los módulos de npm ni consultar el servidor local. La página consulta el estado real del contrato en Testnet. El botón del encabezado abre el selector de Stellar Wallets Kit. Elegí una wallet configurada en **Testnet** y con XLM de prueba para aportar. La wallet debe confirmar cada transacción; ninguna clave privada se introduce en la página.
 
 En esta computadora, si PowerShell no encuentra el ejecutable correcto de `npm`, usá:
 
@@ -36,7 +36,7 @@ node server.mjs
 
 Para crear otra mejenga, abrí **+ Crear mejenga**, ingresá la cuenta pública de la cancha, la meta, el cupo y el plazo, y aprobá la firma. El formulario despliega una **nueva instancia real** del mismo WASM en Testnet. El enlace a la instancia activa aparece en el detalle. Las instancias creadas quedan en la lista de este navegador y se pueden compartir con la URL `?contract=ID`.
 
-Si la wallet no tiene fondos de prueba, obtenelos con [Friendbot](https://friendbot.stellar.org/). En Testnet también se pagan pequeñas comisiones con XLM de prueba. El botón **Aportar en Testnet** solicita la firma, envía la transacción y actualiza el monto y la barra después de la confirmación. **Pagar a la cancha** y **Reclamar mi reembolso** aparecen solo cuando sus condiciones se cumplen.
+Si la wallet no tiene fondos de prueba, obtenelos con [Friendbot](https://friendbot.stellar.org/). En Testnet también se pagan pequeñas comisiones con XLM de prueba. El campo **Tu aporte** muestra el máximo restante y no acepta una cantidad superior. El contrato vuelve a comprobar ese límite al ejecutar la transacción. El botón **Aportar en Testnet** solicita la firma, envía la transacción y actualiza el monto y la barra después de la confirmación. **Pagar a la cancha** y **Reclamar mi reembolso** aparecen solo cuando sus condiciones se cumplen.
 
 ## Pruebas del contrato
 
@@ -71,9 +71,9 @@ El contrato anterior de 50 XLM sigue disponible en [StellarExpert](https://stell
 
 ## Trustless Work
 
-La clave de Trustless Work se lee **solo** desde `.env` en el servidor local. Nunca se incluye en el JavaScript entregado al navegador ni en Git. La página muestra si está configurada y ofrece el [BackOffice de Testnet](https://dapp.trustlesswork.com/).
+La clave de Trustless Work se lee **solo** desde `.env` en el servidor local. Nunca se incluye en el JavaScript entregado al navegador ni en Git. El servidor consulta la API de Testnet por la cuenta pública `ceshez` y la página muestra el escrow que devuelve el índice. También ofrece el [BackOffice de Testnet](https://dapp.trustlesswork.com/).
 
-**Estado actual:** la reserva y los aportes funcionales de esta entrega usan el contrato Soroban propio. Aún no se creó un escrow complementario de Trustless Work ni aparecerá una mejenga en ese dashboard solo por guardar la API key. Trustless Work requiere solicitar un XDR, firmarlo con una wallet de rol y enviarlo a Testnet. Esta separación evita mostrar un escrow inexistente como creado. [Documentación de Trustless Work](https://docs.trustlesswork.com/trustless-work) · [API REST](https://docs.trustlesswork.com/trustless-work/api-rest/introduction).
+Se creó un [escrow complementario de Trustless Work](https://stellar.expert/explorer/testnet/contract/CADIYI2MPDEMH7EBYSAMDKC5E44FN4FIQ4EBXJB2R234WIVIKVNOKZ4Z) de **1 USDC de Testnet**. La consulta `get-escrows-by-signer` devolvió un escrow activo para `ceshez`, con **saldo 0**: todavía no está financiado. Para comprobarlo en una herramienta de Trustless Work sin depender de filtros del dashboard, abrí el [Escrow Viewer](https://viewer.trustlesswork.com/), elegí Testnet y pegá `CADIYI2MPDEMH7EBYSAMDKC5E44FN4FIQ4EBXJB2R234WIVIKVNOKZ4Z`. En el BackOffice V1, elegí Testnet y conectá `ceshez` (`GDXK3…M3ZWL`). Si su lista aún no aparece, la consulta de la API y el Viewer permiten verificar el contrato por ID. Trustless Work requiere un activo emitido con trustline; por eso este ejemplo usa USDC y queda **separado** de la mejenga principal de 1000 XLM. No se suman sus montos ni se afirma que el contrato propio llame al escrow de Trustless Work. [Documentación](https://docs.trustlesswork.com/trustless-work) · [API REST](https://docs.trustlesswork.com/trustless-work/api-rest/introduction).
 
 ## Archivos y publicación
 
