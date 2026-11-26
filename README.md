@@ -1,60 +1,88 @@
-# MejengaPool
+# MejengaPool ⚽
 
-En Costa Rica, organizar una mejenga suele dejar a una persona cobrando la cuota de la cancha. Este proyecto permite crear un escrow en **Trustless Work sobre Stellar Testnet** y recibir aportes de **USDC de prueba**. La interfaz muestra el saldo, la meta, la cancha y los equipos de cada partido. Es una práctica individual, no una propuesta para la hackathon.
+## El problema que elegí
 
-## Qué hace
+En Costa Rica es común organizar una mejenga y que una sola persona se encargue de cobrar la cancha. Si alguien no paga o se sale a última hora, esa persona termina cubriendo el faltante. Elegí este problema porque es cotidiano, fácil de explicar y se puede resolver con reglas pequeñas que todos puedan comprobar.
 
-1. El organizador conecta una wallet de Testnet y crea una mejenga con dos equipos, meta de USDC, cuenta de la cancha, cupo y fecha límite. La app pide una firma y crea un **escrow single-release de Trustless Work**. La meta puede ser, por ejemplo, **1000 USDC de prueba**.
-2. Cada jugador conecta su wallet y firma un aporte. El servidor usa la clave de `.env` para pedir a Trustless Work una transacción sin firmar; la clave privada nunca pasa por la app. Tras la firma, Trustless Work envía la transacción.
-3. La lista consulta los escrows del organizador. Al elegir otro partido, el detalle cambia sus equipos, meta, saldo, cuenta receptora y plazo. El dashboard de Trustless Work permite revisar el escrow con la **misma wallet organizadora** en **Testnet**.
-4. El organizador gestiona el hito, la aprobación y la liberación del pago desde [Trustless Work BackOffice](https://dapp.trustlesswork.com/dashboard). **Llegar a la meta no libera automáticamente el dinero**.
+## Mi solución
 
-La sección `contracts/mejenga-pool/` contiene además el contrato Soroban escrito para la tarea. Sus seis pruebas ejercitan aporte, límite, cupo, pago y reembolso. **Ese contrato de práctica es distinto de los escrows de Trustless Work**. La interfaz principal ahora mueve USDC mediante Trustless Work, no XLM mediante ese contrato.
+Construí un contrato inteligente en **Soroban, la plataforma de contratos de Stellar**, para juntar la cuota de una cancha. Al crear una mejenga se fija una meta, un cupo de jugadores, una cuenta para pagar la cancha y una fecha límite. Cada jugador autoriza su aporte con su wallet. El contrato guarda cuánto ha aportado cada uno y no acepta más de lo que falta para la meta.
 
-## Probar localmente
+Si se completa la meta, se puede ejecutar el pago a la cuenta de la cancha una sola vez. Si vence el plazo sin completar la meta, cada jugador puede reclamar su propio aporte. **El reembolso hay que solicitarlo; no ocurre automáticamente.**
 
-Requisitos: Node.js 20+, una wallet compatible con Stellar Wallets Kit configurada en Testnet y, para probar el contrato de la tarea, Rust, Cargo y Stellar CLI.
+```text
+Crear mejenga → Aportar → Meta completa → Pagar cancha
+                        ↳ Vence el plazo → Cada jugador reclama su reembolso
+```
+
+Me basé en los conceptos que practicamos en las clases con Armando: contratos en Rust, `require_auth()` para autorizar al jugador, almacenamiento del estado, transferencias con `token::Client` y pruebas con un ledger de prueba. Mantuve el contrato pequeño para poder entender y comprobar cada regla. Este proyecto es una práctica individual y no es la idea para la hackathon.
+
+## Cómo funciona el contrato
+
+El contrato está en [`contracts/mejenga-pool/src/lib.rs`](contracts/mejenga-pool/src/lib.rs). Estas son sus funciones principales:
+
+| Función | Qué hace |
+| --- | --- |
+| `__constructor` | Guarda nombre, organizador, cancha, token, meta, plazo y cupo. |
+| `aportar` | Pide la autorización del jugador, valida monto, plazo y cupo, y transfiere su aporte al contrato. |
+| `pagar_cancha` | Transfiere la meta a la cancha solo cuando está completa y evita pagar dos veces. |
+| `reembolsar` | Después del plazo, devuelve a un jugador exactamente su aporte si la meta no se alcanzó. |
+| `estado` y `aporte_de` | Permiten consultar el estado general y el aporte de una wallet. |
+
+El contrato usa el token que se indique al crearlo. La instancia de ejemplo que desplegué en **Stellar Testnet** usa XLM de prueba, con meta de 1000 XLM y cupo de 10 jugadores: [ver contrato en StellarExpert](https://stellar.expert/explorer/testnet/contract/CDE3GNV7QZK6IDZWR6LODBDUBVOBHVBKZS6MTAI3H4NBXWNOHYMY4ZE3).
+
+## Demo visual con Trustless Work
+
+También hice una interfaz para probar la idea de una mejenga con un **escrow de Trustless Work en USDC de Testnet**. Usé [Stellar Wallets Kit](https://stellarwalletskit.dev/) para conectar y firmar desde la wallet. Al crear un partido se piden los dos equipos, meta, cupo, fecha límite y cuenta de la cancha. El servidor solicita a la API de Trustless Work una transacción sin firmar, la wallet la firma y Trustless Work la envía. La lista consulta los escrows y cambia el detalle cuando elijo otro partido.
+
+**Esta demo de USDC y mi contrato Soroban de XLM son contratos distintos.** Los aportes hechos en la interfaz van al escrow de Trustless Work, no al contrato Soroban de la tarea. Llegar a la meta tampoco libera automáticamente el USDC: las personas con los roles correspondientes deben aprobar el hito y liberar el pago en [Trustless Work BackOffice](https://dapp.trustlesswork.com/dashboard).
+
+El cupo, la fecha límite y el máximo restante se validan en esta aplicación. Trustless Work también permite depósitos directos al escrow desde fuera de la aplicación; por eso **no digo que esas tres reglas estén garantizadas por el contrato de Trustless Work**. El contador de jugadores muestra las wallets que aportaron mediante este servidor local. En cambio, el contrato Soroban que programé sí valida meta, cupo y plazo dentro del contrato.
+
+## Cómo correrlo en mi computadora
+
+Necesito Node.js 20 o superior. Para probar el contrato también necesito Rust, Cargo, Stellar CLI y el target de Soroban. Desde la raíz del repositorio ejecuto:
 
 ```powershell
-cd C:\Users\carlo\Documents\Codex\2026-11-25\ho\outputs\mejenga-pool
 npm install
+Copy-Item .env.example .env
+# Abro .env y coloco mi propia clave de Trustless Work Testnet
 npm run dev
 ```
 
-Abrí **http://127.0.0.1:4173/web/**. No abras `web/index.html` como `file://`. En esta computadora, si PowerShell no resuelve `npm`, ejecutá `node server.mjs` tras instalar dependencias.
+Después abro **http://127.0.0.1:4173/web/**. No abro el HTML con doble clic como `file://`, porque así no carga la API local. La clave se queda en `.env` dentro del servidor y no se publica en GitHub. Para conseguir una clave se puede seguir la [guía oficial de Trustless Work](https://docs.trustlesswork.com/trustless-work/introduction/developer-resources/request-api-key).
 
-En `.env` debe existir `TRUSTLESS_WORK_API_KEY=...`. El archivo está excluido de Git y el navegador no recibe la clave. La API usa `https://dev.api.trustlesswork.com` (Testnet). Para aportar USDC de prueba necesitás una [trustline USDC Testnet y tokens del faucet](https://docs.trustlesswork.com/trustless-work/introduction/stellar-and-soroban-the-backbone-of-trustless-work/testnet-tokens). Para las comisiones de red necesitás XLM de prueba. El emisor USDC Testnet documentado por Trustless Work es `GBBD47IF6LWK7P7MDEVSCWR7DPUWV3NY3DTQEVFL4NAT4AQH3ZLLFLA5`.
+Para crear un partido conecto una wallet de **Testnet**, pulso **+ Crear mejenga**, completo el formulario y confirmo la firma. La nueva mejenga se agrega a la lista y se abre en el detalle. Puedo cambiar de partido pulsando otra fila. Para aportar necesito una [trustline de USDC Testnet y USDC de prueba](https://docs.trustlesswork.com/trustless-work/introduction/stellar-and-soroban-the-backbone-of-trustless-work/testnet-tokens), además de algo de XLM de prueba para la comisión. El formulario no deja ingresar más de lo que falta y el servidor vuelve a comprobarlo antes de enviar la transacción.
 
-### Probar la creación y el aporte
+Para buscar un escrow en el [dashboard de Trustless Work](https://dapp.trustlesswork.com/dashboard) selecciono **Testnet** y conecto la **misma wallet con la que lo creé**. También puedo copiar el ID de la página y pegarlo en el [Escrow Viewer](https://viewer.trustlesswork.com/). El escrow inicial de prueba es de **1 USDC** y tiene ID `CADIYI2MPDEMH7EBYSAMDKC5E44FN4FIQ4EBXJB2R234WIVIKVNOKZ4Z`. La meta de **1000 USDC** que aparece en el formulario es una sugerencia; el escrow nuevo solo existe después de confirmar la firma.
 
-1. Pulsá **Conectar wallet** y elegí Testnet. Si usás `ceshez`, su dirección pública termina en `M3ZWL`.
-2. Pulsá **+ Crear mejenga**, ingresá los dos equipos, una meta como `1000`, cupo `10`, cuenta pública de la cancha y plazo. Firmá la creación en la wallet. La nueva fila se selecciona y su detalle se actualiza.
-3. Seleccioná otra fila para comprobar que nombres, saldo, meta, receptor y progreso cambian. El enlace **Ver escrow en Testnet** abre el contrato seleccionado.
-4. Ingresá un aporte menor o igual al saldo restante. Confirmá la firma. La app vuelve a consultar Trustless Work para actualizar el saldo. Podés copiar el ID del escrow y pegarlo en el [Escrow Viewer](https://viewer.trustlesswork.com/) en Testnet.
-5. Abrí el [dashboard](https://dapp.trustlesswork.com/dashboard), elegí **Testnet** y conectá la **misma wallet que firmó la creación**. El dashboard consulta escrows por los roles de esa cuenta. Si aún no se ve, usá el ID en el Viewer y revisá los filtros de rol y estado del dashboard.
+## Pruebas que hice
 
-El escrow anterior de prueba, `CADIYI2MPDEMH7EBYSAMDKC5E44FN4FIQ4EBXJB2R234WIVIKVNOKZ4Z`, es de **1 USDC** con saldo inicial **0**. No es la mejenga de 1000. Esa meta es un valor propuesto en el formulario; hay que firmar su creación para que exista en Trustless Work.
-
-### Límites importantes
-
-La interfaz y el servidor rechazan un aporte mayor que el saldo restante. El servidor vuelve a consultar el saldo antes de enviar una firma. El cupo y el plazo se guardan en la descripción del escrow y se validan **en esta aplicación**. El contador muestra wallets que aportaron mediante este servidor local; aportes directos desde otras aplicaciones no aparecen en ese contador.
-
-**Trustless Work permite depósitos directos al escrow sin aplicar estos límites de MejengaPool en cadena.** Por ello, no se debe presentar la meta, el cupo o el plazo como un límite absoluto del contrato de Trustless Work. El contrato Soroban propio sí comprueba su meta, cupo y plazo en cadena, pero no procesa los aportes USDC de la interfaz actual. Para imponer un límite absoluto en el flujo de Trustless Work haría falta otro diseño de contrato y una integración verificada.
-
-## Pruebas del contrato Soroban
+Para ejecutar las pruebas del contrato:
 
 ```powershell
-cargo test --locked --offline
+cargo test --locked
 stellar contract build --locked
 ```
 
-Las seis pruebas incluidas cubren pago único al completar la meta, rechazo de pago anticipado, reembolso tras el plazo, rechazo de reembolso temprano, validación de monto y plazo, y cupo sin duplicar jugadores. El contrato de práctica desplegado previamente puede verse en [StellarExpert Testnet](https://stellar.expert/explorer/testnet/contract/CDE3GNV7QZK6IDZWR6LODBDUBVOBHVBKZS6MTAI3H4NBXWNOHYMY4ZE3).
+El resultado de `cargo test` fue **6 passed; 0 failed**. Probé estos casos:
 
-## Archivos
+| Prueba | Resultado esperado |
+| --- | --- |
+| Meta completa y pago único | Cinco wallets completan la meta; la cancha cobra una vez. |
+| Pago antes de la meta | El contrato rechaza el pago. |
+| Reembolso después del plazo | El jugador recupera lo que aportó y no puede cobrar dos veces. |
+| Reembolso antes del plazo | El contrato lo rechaza. |
+| Montos y fecha | Rechaza cero, un aporte que supera la meta y un aporte tardío. |
+| Cupo | Una wallet nueva no entra cuando el cupo está lleno; una wallet existente no cuenta dos veces. |
 
-- `server.mjs`: guarda la clave API en el servidor, consulta escrows y solicita transacciones sin firmar a Trustless Work.
-- `web/tw.js`: wallet, selección de partidos, creación y aportes USDC.
-- `web/index.html` y `web/styles.css`: interfaz.
-- `contracts/mejenga-pool/`: contrato Soroban de la práctica y pruebas.
+Las pruebas están en [`contracts/mejenga-pool/src/test.rs`](contracts/mejenga-pool/src/test.rs) y usan el token de prueba del SDK y un ledger en memoria. También comprobé que la API de Trustless Work devuelve el escrow de prueba, que puede preparar una creación sin firmarla y que mi servidor rechaza un aporte superior al saldo restante. **La creación y el aporte completos desde una wallet requieren confirmar la firma manualmente.**
 
-El trabajo está en la rama local `main`. Probá la demo antes de publicarla en GitHub. `.env`, dependencias, datos locales de contribuyentes y compilados están excluidos de Git.
+## Archivos principales
+
+- `contracts/mejenga-pool/`: contrato y pruebas de la tarea.
+- `web/index.html`, `web/styles.css` y `web/tw.js`: interfaz de partidos y wallet.
+- `server.mjs`: servidor local que habla con la API de Trustless Work.
+- `.env.example`: ejemplo de configuración, sin claves reales.
+
+Todo el trabajo para entregar está en la rama `main`.
