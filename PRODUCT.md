@@ -10,7 +10,7 @@ Estudiantes que evalúan la tarea y personas que organizan una mejenga en Costa 
 
 ## Product Purpose
 
-Demostrar una reserva de cancha financiada entre jugadores con una regla verificable: pago a la cancha al completar la meta o devolución individual si vence el plazo.
+Demostrar una reserva de cancha financiada en USDC Testnet mediante Trustless Work y mostrar cada escrow con su meta, saldo, receptor y equipos. El contrato Soroban propio se prueba por separado.
 
 ## Brand Personality
 

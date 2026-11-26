@@ -14,5 +14,6 @@ target
 # Artefactos locales
 node_modules
 dist
+data/contributions.json
 .DS_Store
 **/test_snapshots/

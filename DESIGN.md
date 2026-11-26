@@ -1,6 +1,6 @@
 # Diseño de MejengaPool
 
-La interfaz toma de la captura de FotMob el fondo blanco, la lista compacta de encuentros y el detalle de un partido. Su función es presentar la demostración del contrato, no mover fondos.
+La interfaz toma de la captura de FotMob el fondo blanco, la lista compacta de encuentros y el detalle de un partido. Permite crear escrows de Trustless Work y aportar USDC de Testnet con firma de wallet.
 
 ## Sistema visual
 
@@ -14,5 +14,5 @@ La interfaz toma de la captura de FotMob el fondo blanco, la lista compacta de e
 
 - Sin despliegue: indicar que falta el ID de Testnet y deshabilitar el enlace del contrato.
 - Desplegado: mostrar ID abreviado y enlace a StellarExpert Testnet.
-- Aportes: meta, monto recaudado y plazo siempre visibles.
+- Aportes: meta y saldo del escrow de Trustless Work, plazo anunciado y contador local siempre visibles.
 - Los datos de demostración se etiquetan como ilustrativos.

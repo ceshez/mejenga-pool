@@ -215,3 +215,10 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .trustless .text-link { margin-top: 9px; }
 .tw-links { display: flex; flex-wrap: wrap; gap: 8px 17px; }
 .copy-link { padding: 0; border: 0; background: transparent; cursor: pointer; }
+.match-row { display: grid; gap: 5px; min-height: 64px; }
+.match-row strong { color: #18352d; font-size: .87rem; line-height: 1.3; }
+.match-row span { color: #4d6657; font-size: .72rem; font-weight: 570; overflow-wrap: anywhere; }
+.match-row.selected { border-color: #19814b; background: #eaf7ed; }
+.team-initial { display: grid; place-items: center; width: 62px; height: 62px; border-radius: 12px; background: #def2e3; color: #195738; font-size: 1.15rem; font-weight: 850; }
+.tw-caveat { margin-top: 12px !important; color: #4f5c54 !important; }
+@media (max-width: 620px) { .team-initial { width: 51px; height: 51px; } }
