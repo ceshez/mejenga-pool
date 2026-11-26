@@ -1,10 +1,11 @@
 #![no_std]
 
-use soroban_sdk::{contract, contracterror, contractimpl, contracttype, token, Address, Env};
+use soroban_sdk::{contract, contracterror, contractimpl, contracttype, token, Address, Env, String};
 
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Mejenga {
+    pub nombre: String,
     pub organizador: Address,
     pub cancha: Address,
     pub token: Address,
@@ -12,6 +13,8 @@ pub struct Mejenga {
     pub recaudado: i128,
     pub limite: u64,
     pub pagado: bool,
+    pub cupo: u32,
+    pub jugadores: u32,
 }
 
 #[contracttype]
@@ -33,6 +36,7 @@ pub enum Error {
     SinAporte = 6,
     YaPagado = 7,
     MetaAlcanzada = 8,
+    CupoLleno = 9,
 }
 
 #[contract]
@@ -42,16 +46,19 @@ pub struct MejengaPool;
 impl MejengaPool {
     pub fn __constructor(
         env: Env,
+        nombre: String,
         organizador: Address,
         cancha: Address,
         token: Address,
         meta: i128,
         limite: u64,
+        cupo: u32,
     ) {
-        if meta <= 0 || limite <= env.ledger().timestamp() || organizador == cancha {
+        if nombre.len() == 0 || nombre.len() > 40 || meta <= 0 || limite <= env.ledger().timestamp() || organizador == cancha || cupo < 2 || cupo > 100 {
             soroban_sdk::panic_with_error!(&env, Error::ParametrosInvalidos);
         }
         let mejenga = Mejenga {
+            nombre,
             organizador,
             cancha,
             token,
@@ -59,6 +66,8 @@ impl MejengaPool {
             recaudado: 0,
             limite,
             pagado: false,
+            cupo,
+            jugadores: 0,
         };
         env.storage().instance().set(&Clave::Mejenga, &mejenga);
     }
@@ -81,6 +90,12 @@ impl MejengaPool {
 
         let clave = Clave::Aporte(jugador.clone());
         let anterior: i128 = env.storage().persistent().get(&clave).unwrap_or(0);
+        if anterior == 0 {
+            if mejenga.jugadores >= mejenga.cupo {
+                return Err(Error::CupoLleno);
+            }
+            mejenga.jugadores += 1;
+        }
         env.storage().persistent().set(&clave, &(anterior + monto));
         mejenga.recaudado += monto;
         env.storage().instance().set(&Clave::Mejenga, &mejenga);
@@ -129,6 +144,7 @@ impl MejengaPool {
         }
         env.storage().persistent().remove(&clave);
         mejenga.recaudado -= monto;
+        mejenga.jugadores -= 1;
         env.storage().instance().set(&Clave::Mejenga, &mejenga);
         token::Client::new(&env, &mejenga.token).transfer(
             &env.current_contract_address(),

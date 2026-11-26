@@ -13,5 +13,6 @@ target
 
 # Artefactos locales
 node_modules
+dist
 .DS_Store
 **/test_snapshots/

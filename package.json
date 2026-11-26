@@ -1,0 +1,16 @@
+{
+  "name": "mejenga-pool",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node server.mjs",
+    "build": "vite build"
+  },
+  "dependencies": {
+    "@creit-tech/stellar-wallets-kit": "npm:@jsr/creit-tech__stellar-wallets-kit@^2.8.0",
+    "@stellar/stellar-sdk": "^17.4.0"
+  },
+  "devDependencies": {
+    "vite": "^8.0.0"
+  }
+}

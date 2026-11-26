@@ -12,7 +12,7 @@
     <main class="wrap guide">
       <a class="text-link" href="./index.html">← Volver al partido</a>
       <h1>Probalo en tu computadora</h1>
-      <p class="guide-lead">El contrato se prueba con Rust. La pantalla de la demo se abre con un servidor local sencillo.</p>
+      <p class="guide-lead">Probá el contrato con Rust y usá la demo para leer Testnet, conectar una wallet y firmar aportes de prueba.</p>
       <section class="guide-section">
         <h2>1. Abrí PowerShell en la raíz del proyecto</h2>
         <p>La carpeta debe contener <code>Cargo.toml</code> y <code>README.md</code>.</p>
@@ -21,17 +21,18 @@
         <h2>2. Ejecutá las pruebas</h2>
         <pre><code>cargo test --locked --offline
 stellar contract build --locked</code></pre>
-        <p>Debe aparecer <strong>5 passed; 0 failed</strong>. La compilación genera el archivo WASM en <code>target/wasm32v1-none/release/</code>.</p>
+        <p>Debe aparecer <strong>6 passed; 0 failed</strong>. La compilación genera el archivo WASM en <code>target/wasm32v1-none/release/</code>.</p>
       </section>
       <section class="guide-section">
         <h2>3. Abrí la demo visual</h2>
-        <pre><code>py -m http.server 4173 --directory .</code></pre>
-        <p>En el navegador abrí <a href="http://localhost:4173/web/">localhost:4173/web/</a>. Si <code>py</code> no funciona, probá con <code>python</code>.</p>
+        <pre><code>npm install
+npm run dev</code></pre>
+        <p>En el navegador abrí <a href="http://127.0.0.1:4173/web/">127.0.0.1:4173/web/</a>. Si PowerShell no encuentra npm, ejecutá <code>node server.mjs</code> después de instalar las dependencias.</p>
       </section>
       <section class="guide-section">
         <h2>4. Verificá el contrato público</h2>
-        <p>El botón de la demo abre el contrato desplegado en Stellar Testnet. La pantalla muestra aportes ilustrativos; el estado real se consulta en la red.</p>
-        <a class="primary-button guide-button" href="https://stellar.expert/explorer/testnet/contract/CAETV2PAIABP5VDY3SGW3F6NNSUGVRD5HRXAVVUCUA6YDBJI4TZF7VXH" target="_blank" rel="noopener noreferrer">Ver contrato en Testnet <span aria-hidden="true">↗</span></a>
+        <p>El monto, el número de jugadores y la barra se leen del contrato en Testnet. Para aportar, conectá una wallet de Testnet con XLM de prueba y confirmá la transacción.</p>
+        <a class="primary-button guide-button" href="https://stellar.expert/explorer/testnet/contract/CDE3GNV7QZK6IDZWR6LODBDUBVOBHVBKZS6MTAI3H4NBXWNOHYMY4ZE3" target="_blank" rel="noopener noreferrer">Ver contrato en Testnet <span aria-hidden="true">↗</span></a>
       </section>
     </main>
     <footer class="site-footer"><div class="wrap">Para todos los detalles de la entrega, leé el README.md en el editor.</div></footer>
