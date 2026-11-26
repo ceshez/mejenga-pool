@@ -15,7 +15,7 @@ Crear mejenga → Aportar → Meta completa → Pagar cancha
                         ↳ Vence el plazo → Cada jugador reclama su reembolso
 ```
 
-Me basé en los conceptos que practicamos en las clases con Armando: contratos en Rust, `require_auth()` para autorizar al jugador, almacenamiento del estado, transferencias con `token::Client` y pruebas con un ledger de prueba. Mantuve el contrato pequeño para poder entender y comprobar cada regla. Este proyecto es una práctica individual y no es la idea para la hackathon.
+Me basé en los conceptos que practicamos en las clases con Armando: contratos en Rust, `require_auth()` para autorizar al jugador, almacenamiento del estado, transferencias con `token::Client` y pruebas con un ledger de prueba. Mantuve el contrato pequeño para poder entender y comprobar cada regla.
 
 ## Cómo funciona el contrato
 
@@ -39,22 +39,22 @@ También hice una interfaz para probar la idea de una mejenga con un **escrow de
 
 El cupo, la fecha límite y el máximo restante se validan en esta aplicación. Trustless Work también permite depósitos directos al escrow desde fuera de la aplicación; por eso **no digo que esas tres reglas estén garantizadas por el contrato de Trustless Work**. El contador de jugadores muestra las wallets que aportaron mediante este servidor local. En cambio, el contrato Soroban que programé sí valida meta, cupo y plazo dentro del contrato.
 
-## Cómo correrlo en mi computadora
+## Cómo correrlo localmente
 
-Necesito Node.js 20 o superior. Para probar el contrato también necesito Rust, Cargo, Stellar CLI y el target de Soroban. Desde la raíz del repositorio ejecuto:
+Node.js 20 o superior. Para probar el contrato también necesitas Rust, Cargo, Stellar CLI y el target de Soroban. Desde la raíz del repositorio ejecuta:
 
 ```powershell
 npm install
 Copy-Item .env.example .env
-# Abro .env y coloco mi propia clave de Trustless Work Testnet
+# Abre .env y coloca tu propia clave de Trustless Work Testnet
 npm run dev
 ```
 
-Después abro **http://127.0.0.1:4173/web/**. No abro el HTML con doble clic como `file://`, porque así no carga la API local. La clave se queda en `.env` dentro del servidor y no se publica en GitHub. Para conseguir una clave se puede seguir la [guía oficial de Trustless Work](https://docs.trustlesswork.com/trustless-work/introduction/developer-resources/request-api-key).
+Después abre **http://127.0.0.1:4173/web/**. Para conseguir una clave se puede seguir la [guía oficial de Trustless Work](https://docs.trustlesswork.com/trustless-work/introduction/developer-resources/request-api-key).
 
-Para crear un partido conecto una wallet de **Testnet**, pulso **+ Crear mejenga**, completo el formulario y confirmo la firma. La nueva mejenga se agrega a la lista y se abre en el detalle. Puedo cambiar de partido pulsando otra fila. Para aportar necesito una [trustline de USDC Testnet y USDC de prueba](https://docs.trustlesswork.com/trustless-work/introduction/stellar-and-soroban-the-backbone-of-trustless-work/testnet-tokens), además de algo de XLM de prueba para la comisión. El formulario no deja ingresar más de lo que falta y el servidor vuelve a comprobarlo antes de enviar la transacción.
+Para crear un partido conecta una wallet de **Testnet**, pulsa **+ Crear mejenga**, completa el formulario y confirma la firma. La nueva mejenga se agrega a la lista y se abre en el detalle. Puedo cambiar de partido pulsando otra fila. Para aportar necesito una [trustline de USDC Testnet y USDC de prueba](https://docs.trustlesswork.com/trustless-work/introduction/stellar-and-soroban-the-backbone-of-trustless-work/testnet-tokens), además de algo de XLM de prueba para la comisión. El formulario no deja ingresar más de lo que falta y el servidor vuelve a comprobarlo antes de enviar la transacción.
 
-Para buscar un escrow en el [dashboard de Trustless Work](https://dapp.trustlesswork.com/dashboard) selecciono **Testnet** y conecto la **misma wallet con la que lo creé**. También puedo copiar el ID de la página y pegarlo en el [Escrow Viewer](https://viewer.trustlesswork.com/). El escrow inicial de prueba es de **1 USDC** y tiene ID `CADIYI2MPDEMH7EBYSAMDKC5E44FN4FIQ4EBXJB2R234WIVIKVNOKZ4Z`. La meta de **1000 USDC** que aparece en el formulario es una sugerencia; el escrow nuevo solo existe después de confirmar la firma.
+Para buscar un escrow en el [dashboard de Trustless Work](https://dapp.trustlesswork.com/dashboard) selecciona **Testnet** y conecta la **misma wallet con la que lo creaste**. También puedes copiar el ID de la página y pegarlo en el [Escrow Viewer](https://viewer.trustlesswork.com/). El escrow inicial de prueba es de **1 USDC** y tiene ID `CADIYI2MPDEMH7EBYSAMDKC5E44FN4FIQ4EBXJB2R234WIVIKVNOKZ4Z`. La meta de **1000 USDC** que aparece en el formulario es una sugerencia; el escrow nuevo solo existe después de confirmar la firma.
 
 ## Pruebas que hice
 
@@ -80,9 +80,7 @@ Las pruebas están en [`contracts/mejenga-pool/src/test.rs`](contracts/mejenga-p
 
 ## Archivos principales
 
-- `contracts/mejenga-pool/`: contrato y pruebas de la tarea.
+- `contracts/mejenga-pool/`: contrato y pruebas.
 - `web/index.html`, `web/styles.css` y `web/tw.js`: interfaz de partidos y wallet.
 - `server.mjs`: servidor local que habla con la API de Trustless Work.
-- `.env.example`: ejemplo de configuración, sin claves reales.
-
-Todo el trabajo para entregar está en la rama `main`.
+- `.env.example`: ejemplo de configuración.
